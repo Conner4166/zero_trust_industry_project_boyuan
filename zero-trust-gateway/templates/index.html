@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>零信任安全系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ 零信任安全系统 - 控制面板</h1>
+        
+        <div style="margin: 20px 0;">
+            <span class="status online">✅ Keycloak 运行中</span>
+            <span class="status online">✅ Redis 运行中</span>
+            <span class="status online">✅ Prometheus 运行中</span>
+            <span class="status online">✅ Grafana 运行中</span>
+        </div>
+        
+        <div id="trustScore">100</div>
+        <p style="text-align: center; color: #666;">当前信任分数</p>
+        
+        <div class="button-grid">
+            <button onclick="testAccess('/api/data')">📁 访问普通资源</button>
+            <button onclick="testAccess('/admin/settings')" style="background:#ff9800">🔒 访问敏感资源</button>
+            <button onclick="simulateAttack('location_change')" class="danger">📍 模拟位置变化</button>
+            <button onclick="rapidAccess()">⚡ 频繁访问测试</button>
+            <button onclick="getUserInfo()">👤 查看用户信息</button>
+            <button onclick="clearLogs()">🗑️ 清空日志</button>
+        </div>
+        
+        <div id="results">
+            <div class="log">💡 点击按钮开始测试零信任系统</div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

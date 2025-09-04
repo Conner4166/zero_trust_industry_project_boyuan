@@ -1,0 +1,47 @@
+# Prometheus告警规则
+groups:
+  - name: zero_trust_alerts
+    interval: 30s
+    rules:
+      # 信任分数过低告警
+      - alert: LowTrustScore
+        expr: zero_trust_score < 40
+        for: 1m
+        labels:
+          severity: warning
+          component: zero-trust
+        annotations:
+          summary: "用户 {{ $labels.user }} 信任分数过低"
+          description: "用户 {{ $labels.user }} 的信任分数为 {{ $value }}，低于安全阈值"
+
+      # 异常访问频率告警
+      - alert: HighAccessRate
+        expr: rate(zero_trust_access_total[1m]) > 100
+        for: 30s
+        labels:
+          severity: critical
+          component: zero-trust
+        annotations:
+          summary: "异常高的访问频率"
+          description: "访问频率达到 {{ $value }} 次/分钟"
+
+      # 认证失败率告警
+      - alert: HighAuthFailureRate
+        expr: rate(auth_failures_total[5m]) / rate(auth_attempts_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: keycloak
+        annotations:
+          summary: "认证失败率过高"
+          description: "5分钟内认证失败率达到 {{ $value | humanizePercentage }}"
+
+      # 服务可用性告警
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务 {{ $labels.job }} 已停止"
+          description: "服务 {{ $labels.job }} 在 {{ $labels.instance }} 上已停止运行"

@@ -1,0 +1,105 @@
+{
+  "dashboard": {
+    "title": "零信任安全监控面板",
+    "panels": [
+      {
+        "id": 1,
+        "title": "实时信任分数",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "zero_trust_score",
+            "legendFormat": "{{ user }}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "访问决策分布",
+        "type": "pie-chart",
+        "targets": [
+          {
+            "expr": "sum by (decision) (rate(access_decisions_total[5m]))"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "认证成功率",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "1 - (rate(auth_failures_total[5m]) / rate(auth_attempts_total[5m]))"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "活跃用户数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(increase(user_activity_total[5m]) > 0)"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "安全告警",
+        "type": "alert-list",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "系统延迟",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95延迟"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      }
+    ],
+    "refresh": "5s",
+    "time": {
+      "from": "now-30m",
+      "to": "now"
+    }
+  }
+}

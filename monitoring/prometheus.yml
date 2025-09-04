@@ -1,0 +1,58 @@
+# Prometheus配置文件
+global:
+  scrape_interval: 15s        # 抓取间隔
+  evaluation_interval: 15s    # 规则评估间隔
+  scrape_timeout: 10s         # 抓取超时
+
+# Alertmanager配置（可选）
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# 规则文件（可选）
+rule_files:
+  - "rules/*.yml"
+
+# 抓取配置
+scrape_configs:
+  # 1. Prometheus自监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          environment: 'development'
+
+  # 2. 零信任网关监控
+  - job_name: 'zero-trust-gateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:5000']  # Windows Docker Desktop
+        labels:
+          service: 'zero-trust-gateway'
+          component: 'api'
+
+  # 3. Keycloak监控
+  - job_name: 'keycloak'
+    metrics_path: '/auth/realms/master/metrics'
+    static_configs:
+      - targets: ['keycloak:8080']
+        labels:
+          service: 'keycloak'
+          component: 'auth'
+
+  # 4. Redis监控（需要redis_exporter）
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          component: 'cache'
+
+  # 5. Node Exporter（系统监控）
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
