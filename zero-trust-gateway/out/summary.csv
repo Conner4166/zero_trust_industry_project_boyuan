@@ -1,0 +1,5 @@
+group,http_status,count
+OK,200,50
+STEPUP,200,50
+DENY,200,49
+DENY,403,1
