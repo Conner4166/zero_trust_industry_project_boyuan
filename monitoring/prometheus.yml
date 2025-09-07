@@ -1,16 +1,16 @@
-# Prometheus配置文件
+# Prometheus配置文件 - OpenZiti增强版
 global:
   scrape_interval: 15s        # 抓取间隔
   evaluation_interval: 15s    # 规则评估间隔
   scrape_timeout: 10s         # 抓取超时
 
-# Alertmanager配置（可选）
+# Alertmanager配置
 alerting:
   alertmanagers:
     - static_configs:
         - targets: []
 
-# 规则文件（可选）
+# 规则文件
 rule_files:
   - "rules/*.yml"
 
@@ -24,16 +24,47 @@ scrape_configs:
           service: 'prometheus'
           environment: 'development'
 
-  # 2. 零信任网关监控
+  # 2. 零信任网关监控（标准版）
   - job_name: 'zero-trust-gateway'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['host.docker.internal:5000']  # Windows Docker Desktop
+      - targets: ['flask-gateway:5000']
         labels:
           service: 'zero-trust-gateway'
           component: 'api'
+          mode: 'standard'
 
-  # 3. Keycloak监控
+  # 3. 零信任网关监控（OpenZiti增强版）
+  - job_name: 'zero-trust-gateway-ziti'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['flask-gateway-ziti:5001']
+        labels:
+          service: 'zero-trust-gateway'
+          component: 'api'
+          mode: 'openziti'
+
+  # 4. OpenZiti Controller监控
+  - job_name: 'openziti-controller'
+    metrics_path: '/metrics'
+    scheme: http
+    static_configs:
+      - targets: ['ziti-controller:10080']
+        labels:
+          service: 'openziti'
+          component: 'controller'
+
+  # 5. OpenZiti Edge Router监控
+  - job_name: 'openziti-router'
+    metrics_path: '/metrics'
+    scheme: http
+    static_configs:
+      - targets: ['ziti-edge-router:10080']
+        labels:
+          service: 'openziti'
+          component: 'edge-router'
+
+  # 6. Keycloak监控
   - job_name: 'keycloak'
     metrics_path: '/auth/realms/master/metrics'
     static_configs:
@@ -42,7 +73,7 @@ scrape_configs:
           service: 'keycloak'
           component: 'auth'
 
-  # 4. Redis监控（需要redis_exporter）
+  # 7. Redis监控（需要redis_exporter）
   - job_name: 'redis'
     static_configs:
       - targets: ['redis-exporter:9121']
@@ -50,7 +81,7 @@ scrape_configs:
           service: 'redis'
           component: 'cache'
 
-  # 5. Node Exporter（系统监控）
+  # 8. Node Exporter（系统监控）
   - job_name: 'node'
     static_configs:
       - targets: ['node-exporter:9100']

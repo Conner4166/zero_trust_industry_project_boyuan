@@ -1,0 +1,68 @@
+{
+    "data": [
+        {
+            "_links": {
+                "configs": {
+                    "href": "./services/6QdK3L8qpcSgwSNU4fChuT/configs"
+                },
+                "self": {
+                    "href": "./services/6QdK3L8qpcSgwSNU4fChuT"
+                },
+                "service-edge-router-policies": {
+                    "href": "./services/6QdK3L8qpcSgwSNU4fChuT/service-edge-router-policies"
+                },
+                "service-policies": {
+                    "href": "./services/6QdK3L8qpcSgwSNU4fChuT/service-policies"
+                },
+                "terminators": {
+                    "href": "./services/6QdK3L8qpcSgwSNU4fChuT/terminators"
+                }
+            },
+            "createdAt": "2025-09-05T16:10:41.149Z",
+            "id": "6QdK3L8qpcSgwSNU4fChuT",
+            "tags": {},
+            "updatedAt": "2025-09-05T16:10:41.149Z",
+            "config": {},
+            "configs": [
+                "4OzqftfOlri5vhSNkVbxkj",
+                "4VtkvU0fAckQzpa4rmTIdt"
+            ],
+            "encryptionRequired": true,
+            "maxIdleTimeMillis": 0,
+            "name": "flask-gateway",
+            "permissions": [
+                "Invalid"
+            ],
+            "postureQueries": [
+                {
+                    "isPassing": true,
+                    "policyId": "dummy invalid policy: no posture checks defined",
+                    "policyType": "Invalid",
+                    "postureQueries": []
+                }
+            ],
+            "roleAttributes": [
+                "flask-gateway"
+            ],
+            "terminatorStrategy": "smartrouting"
+        }
+    ],
+    "meta": {
+        "filterableFields": [
+            "terminatorStrategy",
+            "createdAt",
+            "updatedAt",
+            "isSystem",
+            "name",
+            "tags",
+            "roleAttributes",
+            "configs",
+            "id"
+        ],
+        "pagination": {
+            "limit": 10,
+            "offset": 0,
+            "totalCount": 1
+        }
+    }
+}

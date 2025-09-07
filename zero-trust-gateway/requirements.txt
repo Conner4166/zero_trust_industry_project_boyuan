@@ -1,0 +1,19 @@
+# 基础依赖
+Flask==2.3.3
+redis==5.0.0
+PyJWT==2.8.0
+requests==2.31.0
+prometheus-client==0.17.1
+
+# OpenZiti集成（可选）
+# 注意：openziti包可能需要额外配置
+# 如果安装失败，可以注释掉，网关会在标准模式下运行
+openziti==0.8.1
+
+# 测试和分析
+pandas==2.1.0
+matplotlib==3.7.2
+
+# 生产环境可选
+gunicorn==21.2.0
+python-dotenv==1.0.0

@@ -1,6 +1,6 @@
-version: '3.8'
-
 services:
+  # ============ 原有服务 ============
+
   postgres:
     image: postgres:14
     container_name: my-postgres
@@ -15,6 +15,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:23.0.0
@@ -34,6 +37,9 @@ services:
       postgres:
         condition: service_healthy
     command: start-dev
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
 
   redis:
     image: redis:alpine
@@ -42,16 +48,23 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:latest
     container_name: my-prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules:/etc/prometheus/rules:ro
     ports:
       - "9090:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -62,7 +75,139 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
       - "3000:3000"
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
+
+  # ============ OpenZiti 服务（已改为可运行版本） ============
+
+  # OpenZiti Controller - 控制平面
+  ziti-controller:
+    image: openziti/ziti-controller:latest
+    container_name: ziti-controller
+    environment:
+      ZITI_BOOTSTRAP: "true"
+      ZITI_PWD: "admin123"                       # controller 管理员密码
+      ZITI_CTRL_ADVERTISED_ADDRESS: ziti-controller
+      ZITI_CTRL_ADVERTISED_PORT: "1280"
+    ports:
+      - "1280:1280"  # Edge Management API（ziti edge login 用）
+      - "6262:6262"  # Control plane
+    volumes:
+      - ziti_ctrl_data:/persistent
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
+
+  # OpenZiti Edge Router - 数据平面
+  ziti-edge-router:
+    image: openziti/ziti-router:latest
+    container_name: ziti-edge-router
+    environment:
+      ZITI_BOOTSTRAP: "true"
+      ZITI_ENROLL_TOKEN: "${ZITI_ENROLL_TOKEN}"
+      ZITI_CTRL_ADVERTISED_ADDRESS: ziti-controller
+      ZITI_CTRL_ADVERTISED_PORT: "1280"
+      ZITI_ROUTER_NAME: edge-router-1
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ziti-edge-router
+      ZITI_ROUTER_PORT: "3022"
+    ports:
+      - "3022:3022"
+    volumes:
+      - ziti_router_data:/persistent
+    depends_on:
+      ziti-controller:
+        condition: service_started 
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
+
+
+  # Flask网关 - 原版（用于对比）
+  flask-gateway:
+    build: 
+      context: ./zero-trust-gateway
+      dockerfile: Dockerfile
+    container_name: flask-gateway
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      REALM: my-company
+      CLIENT_ID: my-app
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CSV_PATH: /app/out/decisions.csv
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./zero-trust-gateway:/app
+      - ./zero-trust-gateway/out:/app/out
+    depends_on:
+      - redis
+      - keycloak
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
+
+  # Flask网关 - OpenZiti增强版（保留你的挂载，供应用读取自身 identity）
+  flask-gateway-ziti:
+    build: 
+      context: ./zero-trust-gateway
+      dockerfile: Dockerfile
+    container_name: flask-gateway-ziti
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      REALM: my-company
+      CLIENT_ID: my-app
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CSV_PATH: /app/out/decisions_ziti.csv
+      ZITI_CONTROLLER: ziti-controller:1280
+      ZITI_IDENTITY_FILE: /app/identities/gateway.json
+      USE_ZITI: "true"
+    ports:
+      - "5001:5001"  # 直接访问端口（测试用）
+    volumes:
+      - ./zero-trust-gateway:/app
+      - ./zero-trust-gateway/out:/app/out
+      - ./openziti/identities:/app/identities:ro
+    depends_on:
+      - redis
+      - keycloak
+      - ziti-controller
+    command: python app_ziti.py
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
+
+  ziti-gateway:
+    image: openziti/ziti-edge-tunnel:latest
+    container_name: ziti-gateway
+    # 1) 让容器能创建 TUN 设备
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    # 如果你的 Docker Desktop/WSL 对上面不友好，可退一步用 privileged（择一即可）：
+    # privileged: true
+
+    # 2) 让目录可写（很重要！之前是 :ro）
+    volumes:
+      - ./openziti/identities:/ziti-edge-tunnel:rw
+
+    networks:
+      - zero-trust-net
+    restart: unless-stopped
+
+    # 3) 运行参数不变
+    command: ["run","--identity","/ziti-edge-tunnel/flask-gateway.json"] 
+
+networks:
+  zero-trust-net:
+    driver: bridge
 
 volumes:
   postgres_data:
   redis_data:
+  ziti_ctrl_data:
+  ziti_router_data:

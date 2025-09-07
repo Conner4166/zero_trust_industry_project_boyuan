@@ -1,0 +1,85 @@
+{
+    "data": [
+        {
+            "_links": {
+                "self": {
+                    "href": "./configs/4OzqftfOlri5vhSNkVbxkj"
+                }
+            },
+            "createdAt": "2025-09-05T16:07:58.321Z",
+            "id": "4OzqftfOlri5vhSNkVbxkj",
+            "tags": {},
+            "updatedAt": "2025-09-05T16:07:58.321Z",
+            "configType": {
+                "_links": {
+                    "self": {
+                        "href": "./config-types/NH5p4FpGR"
+                    }
+                },
+                "entity": "config-types",
+                "id": "NH5p4FpGR",
+                "name": "host.v1"
+            },
+            "configTypeId": "NH5p4FpGR",
+            "data": {
+                "address": "flask-gateway-ziti",
+                "port": 5001,
+                "protocol": "tcp"
+            },
+            "name": "flask-gateway-host"
+        },
+        {
+            "_links": {
+                "self": {
+                    "href": "./configs/4VtkvU0fAckQzpa4rmTIdt"
+                }
+            },
+            "createdAt": "2025-09-05T16:07:58.252Z",
+            "id": "4VtkvU0fAckQzpa4rmTIdt",
+            "tags": {},
+            "updatedAt": "2025-09-05T16:07:58.252Z",
+            "configType": {
+                "_links": {
+                    "self": {
+                        "href": "./config-types/g7cIWbcGg"
+                    }
+                },
+                "entity": "config-types",
+                "id": "g7cIWbcGg",
+                "name": "intercept.v1"
+            },
+            "configTypeId": "g7cIWbcGg",
+            "data": {
+                "addresses": [
+                    "flask-gateway"
+                ],
+                "portRanges": [
+                    {
+                        "high": 7000,
+                        "low": 7000
+                    }
+                ],
+                "protocols": [
+                    "tcp"
+                ]
+            },
+            "name": "flask-gateway-intercept"
+        }
+    ],
+    "meta": {
+        "filterableFields": [
+            "isSystem",
+            "name",
+            "type",
+            "id",
+            "createdAt",
+            "updatedAt",
+            "tags"
+        ],
+        "pagination": {
+            "limit": 10,
+            "offset": 0,
+            "totalCount": 2
+        }
+    }
+}

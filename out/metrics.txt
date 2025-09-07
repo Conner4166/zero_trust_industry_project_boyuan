@@ -1,0 +1,130 @@
+﻿# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 6663.0
+python_gc_objects_collected_total{generation="1"} 273.0
+python_gc_objects_collected_total{generation="2"} 0.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+# HELP python_gc_collections_total Number of times this generation was collected
+# TYPE python_gc_collections_total counter
+python_gc_collections_total{generation="0"} 110.0
+python_gc_collections_total{generation="1"} 9.0
+python_gc_collections_total{generation="2"} 0.0
+# HELP python_info Python platform information
+# TYPE python_info gauge
+python_info{implementation="CPython",major="3",minor="9",patchlevel="23",version="3.9.23"} 1.0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 2.03472896e+08
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 4.329472e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.75718040161e+09
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 2.9699999999999998
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10.0
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048576e+06
+# HELP zt_decisions_total Zero Trust decisions
+# TYPE zt_decisions_total counter
+zt_decisions_total{action="allow",layer="ziti",reason="high_trust_both_layers"} 30.0
+zt_decisions_total{action="allow_restricted",layer="ziti",reason="mid_risk_readonly"} 30.0
+# HELP zt_decisions_created Zero Trust decisions
+# TYPE zt_decisions_created gauge
+zt_decisions_created{action="allow",layer="ziti",reason="high_trust_both_layers"} 1.7571819664407547e+09
+zt_decisions_created{action="allow_restricted",layer="ziti",reason="mid_risk_readonly"} 1.7571819734482367e+09
+# HELP zt_decision_latency_seconds Decision latency seconds
+# TYPE zt_decision_latency_seconds histogram
+zt_decision_latency_seconds_bucket{le="0.005"} 59.0
+zt_decision_latency_seconds_bucket{le="0.01"} 59.0
+zt_decision_latency_seconds_bucket{le="0.025"} 60.0
+zt_decision_latency_seconds_bucket{le="0.05"} 60.0
+zt_decision_latency_seconds_bucket{le="0.075"} 60.0
+zt_decision_latency_seconds_bucket{le="0.1"} 60.0
+zt_decision_latency_seconds_bucket{le="0.25"} 60.0
+zt_decision_latency_seconds_bucket{le="0.5"} 60.0
+zt_decision_latency_seconds_bucket{le="0.75"} 60.0
+zt_decision_latency_seconds_bucket{le="1.0"} 60.0
+zt_decision_latency_seconds_bucket{le="2.5"} 60.0
+zt_decision_latency_seconds_bucket{le="5.0"} 60.0
+zt_decision_latency_seconds_bucket{le="7.5"} 60.0
+zt_decision_latency_seconds_bucket{le="10.0"} 60.0
+zt_decision_latency_seconds_bucket{le="+Inf"} 60.0
+zt_decision_latency_seconds_count 60.0
+zt_decision_latency_seconds_sum 0.19607996940612793
+# HELP zt_decision_latency_seconds_created Decision latency seconds
+# TYPE zt_decision_latency_seconds_created gauge
+zt_decision_latency_seconds_created 1.7571804022720323e+09
+# HELP zt_trust_score Trust score distribution
+# TYPE zt_trust_score histogram
+zt_trust_score_bucket{layer="network",le="0.005"} 0.0
+zt_trust_score_bucket{layer="network",le="0.01"} 0.0
+zt_trust_score_bucket{layer="network",le="0.025"} 0.0
+zt_trust_score_bucket{layer="network",le="0.05"} 0.0
+zt_trust_score_bucket{layer="network",le="0.075"} 0.0
+zt_trust_score_bucket{layer="network",le="0.1"} 0.0
+zt_trust_score_bucket{layer="network",le="0.25"} 0.0
+zt_trust_score_bucket{layer="network",le="0.5"} 0.0
+zt_trust_score_bucket{layer="network",le="0.75"} 0.0
+zt_trust_score_bucket{layer="network",le="1.0"} 0.0
+zt_trust_score_bucket{layer="network",le="2.5"} 0.0
+zt_trust_score_bucket{layer="network",le="5.0"} 0.0
+zt_trust_score_bucket{layer="network",le="7.5"} 0.0
+zt_trust_score_bucket{layer="network",le="10.0"} 0.0
+zt_trust_score_bucket{layer="network",le="+Inf"} 60.0
+zt_trust_score_count{layer="network"} 60.0
+zt_trust_score_sum{layer="network"} 6000.0
+zt_trust_score_bucket{layer="application",le="0.005"} 0.0
+zt_trust_score_bucket{layer="application",le="0.01"} 0.0
+zt_trust_score_bucket{layer="application",le="0.025"} 0.0
+zt_trust_score_bucket{layer="application",le="0.05"} 0.0
+zt_trust_score_bucket{layer="application",le="0.075"} 0.0
+zt_trust_score_bucket{layer="application",le="0.1"} 0.0
+zt_trust_score_bucket{layer="application",le="0.25"} 0.0
+zt_trust_score_bucket{layer="application",le="0.5"} 0.0
+zt_trust_score_bucket{layer="application",le="0.75"} 0.0
+zt_trust_score_bucket{layer="application",le="1.0"} 0.0
+zt_trust_score_bucket{layer="application",le="2.5"} 0.0
+zt_trust_score_bucket{layer="application",le="5.0"} 0.0
+zt_trust_score_bucket{layer="application",le="7.5"} 0.0
+zt_trust_score_bucket{layer="application",le="10.0"} 0.0
+zt_trust_score_bucket{layer="application",le="+Inf"} 60.0
+zt_trust_score_count{layer="application"} 60.0
+zt_trust_score_sum{layer="application"} 5075.0
+zt_trust_score_bucket{layer="combined",le="0.005"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.01"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.025"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.05"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.075"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.1"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.25"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.5"} 0.0
+zt_trust_score_bucket{layer="combined",le="0.75"} 0.0
+zt_trust_score_bucket{layer="combined",le="1.0"} 0.0
+zt_trust_score_bucket{layer="combined",le="2.5"} 0.0
+zt_trust_score_bucket{layer="combined",le="5.0"} 0.0
+zt_trust_score_bucket{layer="combined",le="7.5"} 0.0
+zt_trust_score_bucket{layer="combined",le="10.0"} 0.0
+zt_trust_score_bucket{layer="combined",le="+Inf"} 60.0
+zt_trust_score_count{layer="combined"} 60.0
+zt_trust_score_sum{layer="combined"} 5352.0
+# HELP zt_trust_score_created Trust score distribution
+# TYPE zt_trust_score_created gauge
+zt_trust_score_created{layer="network"} 1.7571819664399157e+09
+zt_trust_score_created{layer="application"} 1.757181966439975e+09
+zt_trust_score_created{layer="combined"} 1.7571819664401538e+09
+# HELP ziti_connections_total OpenZiti connection attempts
+# TYPE ziti_connections_total counter
+ziti_connections_total{status="authenticated"} 60.0
+# HELP ziti_connections_created OpenZiti connection attempts
+# TYPE ziti_connections_created gauge
+ziti_connections_created{status="authenticated"} 1.7571819664390059e+09

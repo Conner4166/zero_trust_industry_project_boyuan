@@ -1,0 +1,89 @@
+{
+    "data": [
+        {
+            "_links": {
+                "edge-routers": {
+                    "href": "./service-edge-router-policies/2PcrVdVcsXQJQpgDaqDZR1/edge-routers"
+                },
+                "self": {
+                    "href": "./service-edge-router-policies/2PcrVdVcsXQJQpgDaqDZR1"
+                },
+                "services": {
+                    "href": "./service-edge-router-policies/2PcrVdVcsXQJQpgDaqDZR1/services"
+                }
+            },
+            "createdAt": "2025-09-05T16:10:54.088Z",
+            "id": "2PcrVdVcsXQJQpgDaqDZR1",
+            "tags": {},
+            "updatedAt": "2025-09-05T16:10:54.088Z",
+            "edgeRouterRoles": [
+                "#all"
+            ],
+            "edgeRouterRolesDisplay": [
+                {
+                    "name": "#all",
+                    "role": "#all"
+                }
+            ],
+            "name": "ser-flask-gateway-all",
+            "semantic": "AnyOf",
+            "serviceRoles": [
+                "@6QdK3L8qpcSgwSNU4fChuT"
+            ],
+            "serviceRolesDisplay": [
+                {
+                    "name": "@flask-gateway",
+                    "role": "@6QdK3L8qpcSgwSNU4fChuT"
+                }
+            ]
+        },
+        {
+            "_links": {
+                "edge-routers": {
+                    "href": "./service-edge-router-policies/UH1rLbmaW2AjzAgwpgVbj/edge-routers"
+                },
+                "self": {
+                    "href": "./service-edge-router-policies/UH1rLbmaW2AjzAgwpgVbj"
+                },
+                "services": {
+                    "href": "./service-edge-router-policies/UH1rLbmaW2AjzAgwpgVbj/services"
+                }
+            },
+            "createdAt": "2025-09-05T13:23:01.304Z",
+            "id": "UH1rLbmaW2AjzAgwpgVbj",
+            "tags": {},
+            "updatedAt": "2025-09-05T13:23:01.304Z",
+            "edgeRouterRoles": [
+                "#all"
+            ],
+            "edgeRouterRolesDisplay": [
+                {
+                    "name": "#all",
+                    "role": "#all"
+                }
+            ],
+            "name": "serp-gateway",
+            "semantic": "AnyOf",
+            "serviceRoles": null,
+            "serviceRolesDisplay": []
+        }
+    ],
+    "meta": {
+        "filterableFields": [
+            "id",
+            "createdAt",
+            "updatedAt",
+            "tags",
+            "edgeRouterRoles",
+            "isSystem",
+            "name",
+            "semantic",
+            "serviceRoles"
+        ],
+        "pagination": {
+            "limit": 10,
+            "offset": 0,
+            "totalCount": 2
+        }
+    }
+}
