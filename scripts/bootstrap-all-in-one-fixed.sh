@@ -5,7 +5,6 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 ts(){ date "+%H:%M:%S"; }
 say(){ echo -e "[$(ts)] $*"; }
 
-# ---- 基础配置 ----
 ZITI_ADMIN_USER="admin"
 ZITI_ADMIN_PWD="admin123"
 CTRL_URL="https://ziti-controller:1280"
@@ -14,30 +13,25 @@ HOST_IDENT_DIR_SERVERS="./openziti/identities"
 HOST_IDENT_DIR_CLIENTS="./openziti/identities-client"
 mkdir -p "${HOST_IDENT_DIR_SERVERS}" "${HOST_IDENT_DIR_CLIENTS}"
 
-# ==== 0) 检查环境 ====
 if ! docker compose ls >/dev/null 2>&1; then
   echo -e "${RED}❌ 找不到 docker compose 环境${NC}"
   exit 1
 fi
 
-# ==== 1) 清理旧环境（确保干净启动） ====
 say "清理旧环境..."
 docker compose down >/dev/null 2>&1 || true
 docker volume rm $(docker volume ls -q | grep -E 'ziti.*router.*data') 2>/dev/null || true
 rm -rf "${HOST_IDENT_DIR_SERVERS}"/* "${HOST_IDENT_DIR_CLIENTS}"/* 2>/dev/null || true
 
-# ==== 2) 启动基础容器 ====
 say "启动 Postgres / Redis / Keycloak / Ziti Controller ..."
 docker compose up -d postgres redis keycloak ziti-controller >/dev/null
 
-# ==== 3) 等待 Controller 就绪 ====
 say "等待 Ziti Controller 可登录 ..."
 try_login(){ docker exec ziti-controller ziti edge login "$CTRL_URL" -u "$ZITI_ADMIN_USER" -p "$ZITI_ADMIN_PWD" -y >/dev/null 2>&1; }
 ok_login=n
 for _ in $(seq 1 60); do if try_login; then ok_login=y; break; fi; sleep 2; done
 [ "$ok_login" = y ] && echo -e "${GREEN}✔ 登录成功${NC}" || { echo -e "${RED}❌ 无法登录 Controller${NC}"; exit 1; }
 
-# ==== 4) 创建所有配置和身份 ====
 say "创建身份和配置..."
 docker exec ziti-controller bash -c "
 set -e
@@ -84,26 +78,21 @@ ziti edge create service-edge-router-policy ser-flask-gateway-all \
   --service-roles '@flask-gateway' --edge-router-roles '#all' >/dev/null
 "
 
-# 拷贝身份文件
 docker cp ziti-controller:/persistent/flask-gateway.json "${HOST_IDENT_DIR_SERVERS}/" >/dev/null
 docker cp ziti-controller:/persistent/alice.json "${HOST_IDENT_DIR_CLIENTS}/" >/dev/null
 docker cp ziti-controller:/persistent/edge-router-1.jwt "${HOST_IDENT_DIR_SERVERS}/" >/dev/null
 echo -e "${GREEN}✔ 身份和配置创建完成${NC}"
 
-# ==== 5) 创建 .env 文件 ====
 say "创建 .env 文件..."
 echo "ZITI_ENROLL_TOKEN=$(cat ${HOST_IDENT_DIR_SERVERS}/edge-router-1.jwt)" > .env
 
-# ==== 6) 启动 Edge Router ====
 say "启动 Edge Router..."
 docker compose up -d ziti-edge-router >/dev/null
 sleep 10
 
-# ==== 7) 验证 Edge Router 在线（使用 JSON 解析） ====
 say "验证 Edge Router 状态..."
 er_ok=n
 for _ in $(seq 1 30); do
-  # 使用 grep 检查 JSON 中的 isOnline 字段
   if docker exec ziti-controller ziti edge list edge-routers -j 2>/dev/null | grep -q '"isOnline": true'; then
     er_ok=y
     break
@@ -117,7 +106,6 @@ else
   echo -e "${YELLOW}⚠ Edge Router 显示离线，但可能正常工作，继续...${NC}"
 fi
 
-# ==== 8) 启动服务 ====
 say "启动后端服务..."
 docker compose up -d flask-gateway-ziti >/dev/null
 sleep 3
@@ -126,7 +114,6 @@ say "启动 ziti-gateway（托管端）..."
 docker compose up -d ziti-gateway >/dev/null
 sleep 5
 
-# ==== 9) 验证 terminator ====
 say "验证 terminator..."
 term_ok=n
 for _ in $(seq 1 30); do
@@ -145,7 +132,6 @@ else
   sleep 5
 fi
 
-# ==== 10) 最终验证 ====
 echo -e "\n${GREEN}======================================"
 echo -e "✅ OpenZiti 环境部署完成"
 echo -e "======================================${NC}"

@@ -1,11 +1,4 @@
-"""
-零信任安全网关 - OpenZiti增强版
-保留所有原有功能，新增：
-- OpenZiti网络层身份验证
-- 双层信任分计算（网络层 + 应用层）
-- 服务暗化（仅通过OpenZiti访问）
-"""
-
+# -*- coding: utf-8 -*-
 import os
 import csv
 import time
@@ -19,7 +12,7 @@ import jwt
 import redis
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
-# ========== 环境变量 ==========
+
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost:8080")
 REALM = os.getenv("REALM", "my-company")
 CLIENT_ID = os.getenv("CLIENT_ID", "my-app")
@@ -29,51 +22,42 @@ CSV_PATH = os.getenv("CSV_PATH", "out/decisions_ziti.csv")
 USE_ZITI = os.getenv("USE_ZITI", "false").lower() == "true"
 ZITI_CONTROLLER = os.getenv("ZITI_CONTROLLER", "localhost:1280")
 
-# ========== Prometheus 指标（增强版） ==========
+
 DECISIONS = Counter("zt_decisions_total", "Zero Trust decisions", ["action", "reason", "layer"])
 LATENCY = Histogram("zt_decision_latency_seconds", "Decision latency seconds")
 TRUST_SCORE = Histogram("zt_trust_score", "Trust score distribution", ["layer"])
 ZITI_CONNECTIONS = Counter("ziti_connections_total", "OpenZiti connection attempts", ["status"])
 
-# ========== Flask & Redis ==========
+
 app = Flask(__name__)
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
-# ========== OpenZiti集成（可选） ==========
+
 ziti_enabled = False
 if USE_ZITI:
     try:
         import openziti
-        print("🔐 OpenZiti模块已加载")
-        # 注意：实际生产环境需要配置身份文件
-        # 开发模式下，我们先用模拟模式
+        print("OpenZiti模块已加载")
         ziti_enabled = True
     except ImportError:
-        print("⚠️ OpenZiti未安装，运行在标准模式")
+        print("OpenZiti未安装，运行在标准模式")
         USE_ZITI = False
 
-# ========== 工具函数 ==========
 def read_bearer_token(req, body_token=None):
-    """优先读 Authorization: Bearer xxx；否则读 body.token"""
     h = req.headers.get("Authorization", "")
     if h.startswith("Bearer "):
         return h.replace("Bearer ", "", 1).strip()
     return (body_token or "").strip()
 
 def get_client_ip(req):
-    """兼容反向代理/隧道的真实客户端 IP"""
     xff = req.headers.get("X-Forwarded-For", "")
     if xff:
         return xff.split(",")[0].strip()
-    # OpenZiti连接时，IP可能是内部IP
     if USE_ZITI and req.headers.get("X-Openziti-Identity"):
         return "ziti-network"
     return req.remote_addr or "0.0.0.0"
 
 def get_ziti_identity(req):
-    """提取OpenZiti身份信息"""
-    # 在实际实现中，这会从OpenZiti SDK获取
-    # 开发模式下，我们从header模拟
     return req.headers.get("X-Openziti-Identity", None)
 
 def ensure_csv_header(path: str):
@@ -83,9 +67,7 @@ def ensure_csv_header(path: str):
             w = csv.writer(f)
             w.writerow(["ts", "user_id", "trust_score", "network_score", "app_score", "resource", "action", "reason", "via_ziti"])
 
-# ========== 增强的零信任网关 ==========
 class EnhancedZeroTrustGateway:
-    """增强版零信任网关：网络层 + 应用层双重验证"""
     
     def __init__(self):
         self.suspicious_ips = set()
@@ -93,73 +75,61 @@ class EnhancedZeroTrustGateway:
         
     def calculate_network_trust_score(self, user_id, request_context):
         """网络层信任分（OpenZiti相关）"""
-        score = 50  # 基础分
+        score = 50
         
-        # 1) 通过OpenZiti连接 +30分
         if request_context.get("via_ziti"):
             score += 30
             ZITI_CONNECTIONS.labels(status="authenticated").inc()
         else:
             ZITI_CONNECTIONS.labels(status="direct").inc()
             
-        # 2) 有OpenZiti身份 +20分
         if request_context.get("ziti_identity"):
             score += 20
             
         return min(100, score)
     
     def calculate_app_trust_score(self, user_id, request_context):
-        """应用层信任分（原有逻辑）"""
         score = 100
         
-        # 1) IP变化检测
         last_ip = redis_client.get(f"user:{user_id}:last_ip")
         current_ip = request_context.get("ip")
         if last_ip and last_ip != current_ip and current_ip != "ziti-network":
             score -= 20
             
-        # 2) 时间段检测
         current_hour = datetime.now().hour
         if current_hour < 6 or current_hour > 23:
             score -= 15
             
-        # 3) 访问频率检测
         key_ac = f"user:{user_id}:access_count"
         access_count = redis_client.incr(key_ac)
         redis_client.expire(key_ac, 60)
         if access_count > 30:
             score -= 30
             
-        # 4) 敏感操作检测
         if request_context.get("sensitive_operation"):
             score -= 10
             
-        # 5) 设备指纹检测
         device_fingerprint = self._get_device_fingerprint(request_context)
         known_device = redis_client.sismember(f"user:{user_id}:devices", device_fingerprint)
         if not known_device:
             score -= 25
             redis_client.sadd(f"user:{user_id}:devices", device_fingerprint)
             
-        # 保存状态
         redis_client.set(f"user:{user_id}:last_ip", current_ip)
         
         return max(0, min(100, score))
     
     def calculate_combined_trust_score(self, user_id, request_context):
-        """综合信任分计算"""
         network_score = self.calculate_network_trust_score(user_id, request_context)
         app_score = self.calculate_app_trust_score(user_id, request_context)
         
-        # 记录指标
         TRUST_SCORE.labels(layer="network").observe(network_score)
         TRUST_SCORE.labels(layer="application").observe(app_score)
         
-        # 加权平均（网络层30%，应用层70%）
         if USE_ZITI:
             combined_score = (network_score * 0.3 + app_score * 0.7)
         else:
-            combined_score = app_score  # 无OpenZiti时使用纯应用层分数
+            combined_score = app_score
             
         combined_score = int(combined_score)
         redis_client.set(f"user:{user_id}:trust_score", combined_score)
@@ -168,7 +138,6 @@ class EnhancedZeroTrustGateway:
         return combined_score, network_score, app_score
     
     def _get_device_fingerprint(self, context):
-        """设备指纹生成"""
         raw = "|".join([
             context.get("user_agent", ""),
             context.get("accept_language", ""),
@@ -178,8 +147,6 @@ class EnhancedZeroTrustGateway:
         return hashlib.sha256(raw.encode()).hexdigest()
     
     def enforce_policy_with_layers(self, user_id, combined_score, network_score, app_score, resource):
-        """基于多层信任分的策略执行"""
-        # 决策逻辑增强：考虑网络层和应用层
         if combined_score >= 80:
             policy = {
                 "action": "allow",
@@ -219,7 +186,6 @@ class EnhancedZeroTrustGateway:
         return policy
     
     def _log_enhanced_decision(self, user_id, combined_score, network_score, app_score, resource, decision):
-        """增强的决策日志"""
         entry = {
             "timestamp": datetime.now().isoformat(),
             "user_id": user_id,
@@ -236,7 +202,7 @@ class EnhancedZeroTrustGateway:
 
 gateway = EnhancedZeroTrustGateway()
 
-# ========== 路由 ==========
+#路由
 @app.route("/")
 def index():
     mode = "OpenZiti Enhanced" if USE_ZITI else "Standard"
@@ -272,14 +238,13 @@ def access_request():
         return jsonify({"error": "需要认证令牌"}), 401
         
     try:
-        # 开发模式：不验签
         user_info = jwt.decode(token, options={"verify_signature": False})
         user_id = user_info.get("preferred_username", "unknown")
         roles = user_info.get("realm_access", {}).get("roles", [])
     except Exception as e:
         return jsonify({"error": f"令牌无效: {str(e)}"}), 401
         
-    # 构建请求上下文（增强版）
+
     request_context = {
         "ip": get_client_ip(request),
         "user_agent": request.headers.get("User-Agent", ""),
@@ -302,7 +267,7 @@ def access_request():
     layer = "ziti" if USE_ZITI else "standard"
     DECISIONS.labels(policy["action"], policy.get("reason", "unknown"), layer).inc()
     
-    # CSV记录（增强版）
+    # CSV记录
     try:
         with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
@@ -347,12 +312,10 @@ def access_request():
 
 @app.route("/api/user-behavior/<user_id>", methods=["GET"])
 def get_user_behavior(user_id):
-    """获取用户行为分析"""
     trust_score = redis_client.get(f"user:{user_id}:trust_score") or 100
     last_ip = redis_client.get(f"user:{user_id}:last_ip") or "unknown"
     access_count = redis_client.get(f"user:{user_id}:access_count") or 0
     
-    # 获取设备列表
     devices = list(redis_client.smembers(f"user:{user_id}:devices"))
     
     return jsonify({
@@ -372,7 +335,6 @@ def simulate_ziti_connection():
     action = data.get("action", "connect")
     
     if action == "connect":
-        # 模拟通过OpenZiti连接
         request.headers.environ["X-Via-Ziti"] = "true"
         request.headers.environ["X-Openziti-Identity"] = "test-user@ziti"
         return jsonify({"message": "模拟OpenZiti连接成功", "identity": "test-user@ziti"})
@@ -381,7 +343,6 @@ def simulate_ziti_connection():
     else:
         return jsonify({"error": "未知操作"}), 400
 
-# ========== 主入口 ==========
 if __name__ == "__main__":
     os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
     port = 5001 if USE_ZITI else 5000

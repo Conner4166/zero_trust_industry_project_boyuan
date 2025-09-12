@@ -1,5 +1,4 @@
 services:
-  # ============ 原有服务 ============
 
   postgres:
     image: postgres:14
@@ -79,9 +78,8 @@ services:
       - zero-trust-net
     restart: unless-stopped
 
-  # ============ OpenZiti 服务（已改为可运行版本） ============
+  #OpenZiti服务
 
-  # OpenZiti Controller - 控制平面
   ziti-controller:
     image: openziti/ziti-controller:latest
     container_name: ziti-controller
@@ -99,7 +97,6 @@ services:
       - zero-trust-net
     restart: unless-stopped
 
-  # OpenZiti Edge Router - 数据平面
   ziti-edge-router:
     image: openziti/ziti-router:latest
     container_name: ziti-edge-router
@@ -123,7 +120,7 @@ services:
     restart: unless-stopped
 
 
-  # Flask网关 - 原版（用于对比）
+  # Flask网关原
   flask-gateway:
     build: 
       context: ./zero-trust-gateway
@@ -148,7 +145,7 @@ services:
       - zero-trust-net
     restart: unless-stopped
 
-  # Flask网关 - OpenZiti增强版（保留你的挂载，供应用读取自身 identity）
+  # Flask网关
   flask-gateway-ziti:
     build: 
       context: ./zero-trust-gateway
@@ -165,7 +162,7 @@ services:
       ZITI_IDENTITY_FILE: /app/identities/gateway.json
       USE_ZITI: "true"
     ports:
-      - "5001:5001"  # 直接访问端口（测试用）
+      - "5001:5001"
     volumes:
       - ./zero-trust-gateway:/app
       - ./zero-trust-gateway/out:/app/out
@@ -182,16 +179,11 @@ services:
   ziti-gateway:
     image: openziti/ziti-edge-tunnel:latest
     container_name: ziti-gateway
-    # 1) 让容器能创建 TUN 设备
     cap_add:
       - NET_ADMIN
       - NET_RAW
     devices:
       - /dev/net/tun:/dev/net/tun
-    # 如果你的 Docker Desktop/WSL 对上面不友好，可退一步用 privileged（择一即可）：
-    # privileged: true
-
-    # 2) 让目录可写（很重要！之前是 :ro）
     volumes:
       - ./openziti/identities:/ziti-edge-tunnel:rw
 
@@ -199,7 +191,6 @@ services:
       - zero-trust-net
     restart: unless-stopped
 
-    # 3) 运行参数不变
     command: ["run","--identity","/ziti-edge-tunnel/flask-gateway.json"] 
 
 networks:
